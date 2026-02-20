@@ -55,4 +55,21 @@ with col2:
     if target_future_cycle in history_db:
         st.success(history_db[target_future_cycle])
     else:
-        st.success(f"**歴史の螺旋（{target_future_cycle}年）**\n{target_past_year}年の出来事から60年が経過。歴史のサイクルが
+        st.success(f"**歴史の螺旋（{target_future_cycle}年）**\n{target_past_year}年の出来事から60年が経過。歴史のサイクルが一周し、新しい進化が起きる年です。")
+
+# --- セクション2: 未来予想 ---
+st.header(f"🔮 {prediction_year}年 未来予想")
+st.warning(f"**【{prediction_year}年の展望】**\n{target_future_cycle}年の大きな変化を受けて、この年は社会の「新しい常識」が定着するタイミングです。過去のサイクルを分析すると、ここから次の60年の基盤が作られます。")
+
+# --- セクション3: 最新ニュース ---
+st.header(f"📰 最新ニュース: {search_query}")
+encoded = urllib.parse.quote(search_query)
+feed = feedparser.parse(f"https://news.google.com/rss/search?q={encoded}&hl=ja&gl=JP&ceid=JP:ja")
+
+for entry in feed.entries[:6]:
+    st.markdown(f'''
+        <div style="background:#f0f2f6; padding:15px; border-radius:10px; border-left:5px solid #ff4b4b; margin-bottom:10px;">
+            <strong style="color:#333;">{entry.title}</strong>
+        </div>
+    ''', unsafe_allow_html=True)
+    st.link_button("記事を読む", entry.link)
