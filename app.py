@@ -8,76 +8,51 @@ st.set_page_config(page_title="歴史のタイムマシン・ニュース", layo
 
 # 2. サイドバーの設定
 st.sidebar.title("🎮 操作パネル")
-
-# 【機能1】ニュース検索
-st.sidebar.subheader("🔍 ニュースを探す")
-if 'search_word' not in st.session_state:
-    st.session_state.search_word = "人工知能"
-
-search_query = st.sidebar.text_input("キーワードを入力してEnter", value=st.session_state.search_word)
-st.session_state.search_word = search_query
-
-st.sidebar.divider()
-
-# 【機能2】比較する年代の切り替え
-st.sidebar.subheader("⏳ 歴史をさかのぼる")
-# デフォルトを61年前(1965)に設定
-past_years_back = st.sidebar.slider("左側の年を何年前にしますか？", min_value=1, max_value=100, value=61)
+search_query = st.sidebar.text_input("🔍 ニュース検索キーワード", value="人工知能")
+past_years_back = st.sidebar.slider("⏳ 左側の年を何年前にしますか？", 1, 100, 61)
 
 current_year = datetime.now().year
-# 左側の年（過去）
 target_past_year = current_year - past_years_back
-# 右側の年（過去+60年）
 target_future_cycle = target_past_year + 60
-
-st.sidebar.info(f"左側：{target_past_year}年\n右側：{target_future_cycle}年（60年周期）")
+prediction_year = target_future_cycle + 1
 
 # 3. メイン画面
 st.title(f"🕰️ 歴史の輪廻：{target_past_year}年 ↔ {target_future_cycle}年")
 
-# --- セクション1: 歴史のリスト (60年周期で連動) ---
-st.header(f"🔄 繰り返す歴史のサイクル ({target_past_year}年 ↔ {target_future_cycle}年)")
+# --- セクション1: 歴史のリスト (内容を動的に生成) ---
+st.header(f"🔄 繰り返す歴史のサイクル")
 col1, col2 = st.columns(2)
+
+# 年代に応じた説明文を生成する関数
+def get_era_description(year):
+    if year == 1965:
+        return "**初の商業通信衛星打ち上げ成功**\n世界がリアルタイムで繋がる通信革命の年でした。"
+    elif year == 2025:
+        return "**AGI（汎用人工知能）の社会実装**\nAIが人間のパートナーとして本格化した歴史的転換点です。"
+    elif year < 1945:
+        return f"**激動の戦前・戦中（{year}年）**\n世界秩序が大きく揺れ動き、新しい時代の足音が聞こえ始めた頃です。"
+    elif 1945 <= year < 1990:
+        return f"**高度経済成長と東西冷戦（{year}年）**\n技術革新が次々と起こり、人々の生活が劇的に豊かになった黄金時代です。"
+    else:
+        return f"**デジタル革命の進展（{year}年）**\nインターネットとスマホが普及し、個人の発信力が最大化した時代です。"
 
 with col1:
     st.subheader(f"🗓️ {target_past_year}年")
-    if target_past_year == 1965:
-        st.info("**初の商業通信衛星打ち上げ成功**\n世界が映像で繋がり、地球規模の通信革命が始まった瞬間です。")
-        st.info("**日韓基本条約の調印と国交回復**\n戦後の外交に大きな区切りをつけ、アジアの新しい関係を作りました。")
-    else:
-        st.info(f"**{target_past_year}年の主な出来事**\nこの年に蒔かれた種が、60年の時を経てどのように花開いたかを右側と比較してみましょう。")
+    st.info(get_era_description(target_past_year))
 
 with col2:
     st.subheader(f"🗓️ {target_future_cycle}年")
-    if target_future_cycle == 2025:
-        st.success("**AGI（汎用人工知能）の社会実装**\nAIが人間のように思考し、最高のパートナーとして進化した年です。")
-        st.success("**大阪・関西万博による国際交流**\n世界が知恵を出し合い、未来の命を救うための対話が行われました。")
-    else:
-        st.success(f"**{target_future_cycle}年の出来事**\n{target_past_year}年から還暦（60年）を迎え、歴史が新しいステージに到達した年です。")
+    st.success(get_era_description(target_future_cycle))
 
-# --- セクション2: 未来予想 (右側の年の翌年を表示) ---
-prediction_year = target_future_cycle + 1
+# --- セクション2: 未来予想 ---
 st.header(f"🔮 {prediction_year}年 未来予想")
-st.warning(f"""
-**【{prediction_year}年の展望：AIエージェントによる個人の帝国化】**
-AIがあなたの分身として24時間働き、たった一人であっても世界中の人々へ価値を届けられる『超・個人時代』が本格的に幕を開けます。高度な自動化により、個人の創造力がかつてないほど試される一年となるでしょう。
-""")
+st.warning(f"**【{prediction_year}年の展望】**\n{target_future_cycle}年の技術革新を受け、社会の仕組みが根本から書き換わります。個人の力が企業の力を上回る『超・分散型社会』への移行が加速するでしょう。")
 
 # --- セクション3: 最新ニュース ---
-st.header(f"📰 最新の日本語ニュース: {search_query}")
-
+st.header(f"📰 最新ニュース: {search_query}")
 encoded = urllib.parse.quote(search_query)
-rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=ja&gl=JP&ceid=JP:ja"
-feed = feedparser.parse(rss_url)
+feed = feedparser.parse(f"https://news.google.com/rss/search?q={encoded}&hl=ja&gl=JP&ceid=JP:ja")
 
-if not feed.entries:
-    st.error("ニュースが見つかりませんでした。別の言葉を試してください。")
-else:
-    for entry in feed.entries[:8]:
-        st.markdown(f'''
-            <div style="background:#f0f2f6; padding:15px; border-radius:10px; border-left:5px solid #ff4b4b; margin-bottom:10px;">
-                <small style="color:#666;">{entry.get('published', '')}</small><br>
-                <strong style="font-size:1.1rem; color:#333;">{entry.title}</strong>
-            </div>
-        ''', unsafe_allow_html=True)
-        st.link_button("記事を読む", entry.link)
+for entry in feed.entries[:6]:
+    st.markdown(f'<div style="background:#f0f2f6;padding:15px;border-radius:10px;border-left:5px solid #ff4b4b;margin-bottom:10px;">{entry.title}</div>', unsafe_allow_html=True)
+    st.link_button("記事を読む", entry.link)
