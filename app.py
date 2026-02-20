@@ -16,37 +16,50 @@ target_past_year = current_year - past_years_back
 target_future_cycle = target_past_year + 60
 prediction_year = target_future_cycle + 1
 
-# 3. メイン画面
+# 3. 歴史データ辞書（ここに事実を詰め込みます）
+history_db = {
+    1964: "**東京オリンピック開催・東海道新幹線開業**\n日本のインフラが劇的に進化し、世界に復興を示した象徴的な年です。",
+    1965: "**初の商業通信衛星・日韓基本条約**\n「通信革命」と「外交の節目」が重なり、現在の国際社会の基礎ができました。",
+    1969: "**アポロ11号が月面着陸成功**\n人類の活動範囲が宇宙へと広がった、テクノロジーの極致といえる年です。",
+    1985: "**つくば万博・プラザ合意**\nハイテク技術への期待と、日本経済の大きな転換点が訪れた年です。",
+    1991: "**バブル崩壊・インターネットの一般開放**\n一つの時代が終わり、デジタルという新しい波が押し寄せた分岐点です。",
+    1995: "**Windows 95発売・阪神淡路大震災**\nIT革命の幕開けと、社会のあり方を問い直す大きな出来事が重なりました。",
+    2024: "**新紙幣発行・生成AIの爆発的普及**\n経済の象徴が変わると同時に、知能の定義が書き換わり始めた年です。",
+    2025: "**大阪・関西万博・AGI（汎用人工知能）の進展**\n命を輝かせる未来社会のデザインと、AIとの共生が本格化した年です。"
+}
+
+# 4. メイン画面
 st.title(f"🕰️ 歴史の輪廻：{target_past_year}年 ↔ {target_future_cycle}年")
 
-# --- セクション1: 歴史のリスト (内容を動的に生成) ---
+# --- セクション1: 歴史のリスト ---
 st.header(f"🔄 繰り返す歴史のサイクル")
 col1, col2 = st.columns(2)
 
-# 年代に応じた説明文を生成する関数
-def get_era_description(year):
-    if year == 1965:
-        return "**初の商業通信衛星打ち上げ成功**\n世界がリアルタイムで繋がる通信革命の年でした。"
-    elif year == 2025:
-        return "**AGI（汎用人工知能）の社会実装**\nAIが人間のパートナーとして本格化した歴史的転換点です。"
-    elif year < 1945:
-        return f"**激動の戦前・戦中（{year}年）**\n世界秩序が大きく揺れ動き、新しい時代の足音が聞こえ始めた頃です。"
-    elif 1945 <= year < 1990:
-        return f"**高度経済成長と東西冷戦（{year}年）**\n技術革新が次々と起こり、人々の生活が劇的に豊かになった黄金時代です。"
+def get_history_fact(year):
+    # 辞書にデータがあればそれを返し、なければ汎用テキストを作る
+    if year in history_db:
+        return history_db[year]
     else:
-        return f"**デジタル革命の進展（{year}年）**\nインターネットとスマホが普及し、個人の発信力が最大化した時代です。"
+        # データがない年のための汎用ロジック
+        if year < 1945: return f"**激動の時代（{year}年）**\n世界が再編され、次世代の技術（無線や航空など）の種が蒔かれた頃です。"
+        if year < 2000: return f"**成長と革新の時代（{year}年）**\nアナログからデジタルへ、価値観が大きくシフトし始めた重要な時期です。"
+        return f"**デジタル・グローバル時代（{year}年）**\nネットワークで世界が一体化し、加速度的に変化が進んでいる時代です。"
 
 with col1:
     st.subheader(f"🗓️ {target_past_year}年")
-    st.info(get_era_description(target_past_year))
+    st.info(get_history_fact(target_past_year))
 
 with col2:
     st.subheader(f"🗓️ {target_future_cycle}年")
-    st.success(get_era_description(target_future_cycle))
+    # 右側が未来(2026年以降)の場合は「未来予測」的なメッセージにする
+    if target_future_cycle >= current_year:
+        st.success(f"**未来への到達（{target_future_cycle}年）**\n左側の{target_past_year}年から60年。歴史の螺旋が一周し、かつての課題が新しい形で解決される年です。")
+    else:
+        st.success(get_history_fact(target_future_cycle))
 
 # --- セクション2: 未来予想 ---
 st.header(f"🔮 {prediction_year}年 未来予想")
-st.warning(f"**【{prediction_year}年の展望】**\n{target_future_cycle}年の技術革新を受け、社会の仕組みが根本から書き換わります。個人の力が企業の力を上回る『超・分散型社会』への移行が加速するでしょう。")
+st.warning(f"**【{prediction_year}年の展望】**\n{target_future_cycle}年の出来事を経て、社会は次のステップへ。過去のサイクルから見ると、この年は「新しい常識」が定着し、人々の生活様式が完全に切り替わるタイミングとなります。")
 
 # --- セクション3: 最新ニュース ---
 st.header(f"📰 最新ニュース: {search_query}")
@@ -54,5 +67,9 @@ encoded = urllib.parse.quote(search_query)
 feed = feedparser.parse(f"https://news.google.com/rss/search?q={encoded}&hl=ja&gl=JP&ceid=JP:ja")
 
 for entry in feed.entries[:6]:
-    st.markdown(f'<div style="background:#f0f2f6;padding:15px;border-radius:10px;border-left:5px solid #ff4b4b;margin-bottom:10px;">{entry.title}</div>', unsafe_allow_html=True)
+    st.markdown(f'''
+        <div style="background:#f0f2f6; padding:15px; border-radius:10px; border-left:5px solid #ff4b4b; margin-bottom:10px;">
+            <strong style="color:#333;">{entry.title}</strong>
+        </div>
+    ''', unsafe_allow_html=True)
     st.link_button("記事を読む", entry.link)
