@@ -7,7 +7,7 @@ from datetime import datetime
 # 1. ページ設定
 st.set_page_config(page_title="歴史のタイムマシン・2026予言", layout="wide")
 
-# 2. 歴史データベース (1945年〜1965年と、その60年後)
+# 2. 歴史データベース
 history_db = {
     1945: ("終戦・国際連合設立", "2005: 愛知万博・YouTube誕生"),
     1946: ("日本国憲法公布", "2006: 第1回WBC優勝・Twitter開始"),
@@ -32,7 +32,7 @@ history_db = {
     1965: ("商業通信衛星成功・日韓基本条約", "2025: 大阪・関西万博・AGI（汎用AI）の実装")
 }
 
-# 3. 2026年 未来予想の10パターン
+# 3. 未来予想
 predictions_2026 = [
     "**【AIエージェントによる個人の帝国化】** 一人がAIを使いこなし、大企業並みの価値を生む時代へ。",
     "**【バーチャル経済の完全自立】** メタバース内での経済圏が現物経済を凌駕し始める。",
@@ -49,48 +49,32 @@ predictions_2026 = [
 # 4. サイドバー
 st.sidebar.title("🎮 操作パネル")
 search_query = st.sidebar.text_input("🔍 最新ニュース検索", value="人工知能")
-
-# スライダー（1945〜1965に固定）
 target_past_year = st.sidebar.select_slider(
-    "⏳ 過去の年（1945-1965）を選択",
+    "⏳ 過去の年を選択",
     options=list(history_db.keys()),
     value=1965
 )
 
-target_future_cycle = target_past_year + 60
-prediction_year = 2026
-
 # 5. メイン画面
+target_future_cycle = target_past_year + 60
 st.title(f"🕰️ 歴史の輪廻：{target_past_year}年 ↔ {target_future_cycle}年")
-st.write("1945年から1965年までの21年間と、その還暦後の出来事を比較します。")
 
-# --- 歴史のリスト ---
-st.header(f"🔄 60年周期のシンクロニシティ")
 col1, col2 = st.columns(2)
-
 past_fact, future_fact = history_db[target_past_year]
-
 with col1:
-    st.subheader(f"🗓️ {target_past_year}年（過去）")
+    st.subheader(f"🗓️ {target_past_year}年")
     st.info(past_fact)
-
 with col2:
-    st.subheader(f"🗓️ {target_future_cycle}年（還暦後）")
+    st.subheader(f"🗓️ {target_future_cycle}年")
     st.success(future_fact)
 
-# --- 未来予想（ランダム表示） ---
 st.write("---")
-st.header(f"🔮 {prediction_year}年 未来予言（おみくじ）")
-# ページを開くたび、または操作のたびにランダムで1つ選ぶ
-selected_prediction = random.choice(predictions_2026)
-st.warning(f"アクセスするたびに変わる、AIからの予言メッセージ：\n\n{selected_prediction}")
-st.caption("※この予想はAIによる創作であり、実際の出来事を保証するものではありません。")
+st.header("🔮 2026年 未来予言（おみくじ）")
+st.warning(random.choice(predictions_2026))
 
-# --- ニュース ---
 st.header(f"📰 最新ニュース: {search_query}")
 encoded = urllib.parse.quote(search_query)
 feed = feedparser.parse(f"https://news.google.com/rss/search?q={encoded}&hl=ja&gl=JP&ceid=JP:ja")
-
 for entry in feed.entries[:5]:
     st.markdown(f'<div style="background:#f0f2f6;padding:10px;border-radius:10px;margin-bottom:5px;">{entry.title}</div>', unsafe_allow_html=True)
-    st.link_button("記事を読む", entry.link)
+    st.link_button("読む", entry.link)
