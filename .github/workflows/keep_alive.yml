@@ -2,13 +2,14 @@ name: Keep Streamlit App Alive
 
 on:
   schedule:
-    # 8時間おきに実行 (UTC時間で 0, 8, 16時)
-    - cron: '0 */8 * * *'
-  workflow_dispatch: # 手動実行も可能にする
+    # 頻度を少し上げて、4時間おき（1日6回）にするのも手です
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - name: Access Streamlit App
-        run: curl -I https://rekishi-ai-app-n58vasuxhabfuhsj8xjxmm.streamlit.app/
+        # -L はリダイレクトを追いかけ、-s は余計なログを出さない設定です
+        run: curl -L -s https://あなたのアプリ名.streamlit.app/ > /dev/null
