@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Access Streamlit App
         # -L はリダイレクトを追いかけ、-s は余計なログを出さない設定です
-        run: curl -L -s https://あなたのアプリ名.streamlit.app/ > /dev/null
+        run: curl -L -s https://rekishi-ai-app-n58vasuxhabfuhsj8xjxmm.streamlit.app/ > /dev/null
