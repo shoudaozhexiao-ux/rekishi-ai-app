@@ -2,7 +2,7 @@ name: Keep Streamlit App Alive
 
 on:
   schedule:
-    # 頻度を少し上げて、4時間おき（1日6回）にするのも手です
+    # 4時間おきに実行
     - cron: '0 */4 * * *'
   workflow_dispatch:
 
@@ -11,5 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Access Streamlit App
-        # -L はリダイレクトを追いかけ、-s は余計なログを出さない設定です
-        run: curl -L -s https://rekishi-ai-app-n58vasuxhabfuhsj8xjxmm.streamlit.app/ > /dev/null
+        # ブラウザのふり（User-Agent）を追加し、無限リダイレクトを防ぐため -L を外しています
+        run: |
+          curl -s -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+          "https://rekishi-ai-app-n58vasuxhabfuhsj8xjxmm.streamlit.app/" > /dev/null
