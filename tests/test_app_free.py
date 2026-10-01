@@ -69,8 +69,8 @@ class AppTests(unittest.TestCase):
         self.assertEqual({call.args for call in fetch.call_args_list}, {
             (1965, 'world'), (2025, 'world'), (1966, 'japan'), (1966, 'world'),
         })
-        self.assertTrue(any(name == 'dataframe' for name, _ in self.st.displayed))
-        self.assertEqual(len([1 for name, _ in self.st.displayed if name == 'warning']), 2)
+        self.assertTrue(any(name == 'markdown' and 'chronicle-table' in args[0] for name, args in self.st.displayed))
+        self.assertEqual(len([1 for name, args in self.st.displayed if name == 'markdown' and '<article class="forecast-sheet">' in args[0]]), 2)
         self.execute()
         self.assertEqual(fetch.call_count, 8)
 
@@ -82,8 +82,9 @@ class AppTests(unittest.TestCase):
         self.assertEqual({call.args for call in fetch.call_args_list}, {
             (1966, 'world'), (2026, 'world'), (1967, 'japan'), (1967, 'world'),
         })
-        warnings = [args[0] for name, args in self.st.displayed if name == 'warning']
-        self.assertTrue(all('2027年' in text for text in warnings))
+        forecasts = [args[0] for name, args in self.st.displayed if name == 'markdown' and '<article class="forecast-sheet">' in args[0]]
+        self.assertTrue(forecasts)
+        self.assertTrue(all('2027年' in text for text in forecasts))
 
     @patch('history_free.fetch_history')
     def test_one_failed_source_does_not_disable_other_forecast(self, fetch):
@@ -94,7 +95,7 @@ class AppTests(unittest.TestCase):
         fetch.side_effect = response
         self.execute()
         self.assertIn(('error', ('日本の資料を取得できません',)), self.st.displayed)
-        self.assertEqual(len([1 for name, _ in self.st.displayed if name == 'warning']), 1)
+        self.assertEqual(len([1 for name, args in self.st.displayed if name == 'markdown' and '<article class="forecast-sheet">' in args[0]]), 1)
 
 
 if __name__ == '__main__':

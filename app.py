@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import feedparser
 import urllib.parse
+from manuscript import comparison_table, prediction_card
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.request import Request, urlopen
@@ -25,29 +26,9 @@ if type(current_year) is not int or not 1900 <= current_year <= 9999:
     st.error("ブラウザの年を取得できません。端末の日付設定を確認してください。")
     st.stop()
 
-# カスタムCSSで「古文書風」のデザインを適用
-st.markdown("""
-    <style>
-    /* 全体の背景色を和紙風に */
-    .main {
-        background-color: #f4eade;
-    }
-    /* テキストの色を墨色に */
-    h1, h2, h3, p, span, label {
-        color: #2b2b2b !important;
-        font-family: "Sawarabi Mincho", "Hiragino Mincho ProN", serif;
-    }
-    /* 枠線の装飾 */
-    .stAlert {
-        border: 2px solid #8b4513 !important;
-        background-color: #fdf5e6 !important;
-    }
-    /* サイドバーの色 */
-    [data-testid="stSidebar"] {
-        background-color: #e0d5c1;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+# 和紙の配色と、読みやすい本文・見出し。
+stylesheet = (Path(__file__).parent / "assets" / "manuscript.css").read_text(encoding="utf-8")
+st.markdown(f"<style>{stylesheet}</style>", unsafe_allow_html=True)
 
 # 61〜80年前は実際の60年後と比較。60年前は今年の予想に使用する。
 comparison_years, forecast_past_year = year_ranges(current_year)
@@ -65,9 +46,15 @@ st.sidebar.button("🔄 歴史データを再取得")
 st.sidebar.caption("表示・年の変更・再取得のたびに資料を更新します。")
 search_query = st.sidebar.text_input("🔍 ニュース検索", value="人工知能", max_chars=200)
 
-st.markdown("# 🕰️ 六十年の連環：歴史の比較と今年の予想")
-st.write("―― 歴史は螺旋の如く、巡りて再び現る。")
-st.caption("APIキー不要。歴史資料を取得し、共通する言葉とテーマで比較・予想します。")
+st.markdown(
+    '<div class="manuscript-cover">'
+    '<div class="kicker">古年譜 ・ 預言之書</div>'
+    '<h1>六十年の連環</h1>'
+    '<p>歴史をひもとき、今年を想う。</p>'
+    f'<span class="year-stamp">{current_year}年の巻</span>'
+    '</div>',
+    unsafe_allow_html=True,
+)
 
 # 互いに独立した資料を取得。失敗した資料だけを表示不能にする。
 later_year = target_past_year + 60
@@ -99,7 +86,7 @@ def show_events(history, label):
     source(history)
 
 
-st.header("🔄 61〜80年前と、その60年後の比較")
+st.header("壱　六十年を隔てた出来事")
 st.subheader(f"{comparison_scope}：{target_past_year}年 ↔ {later_year}年")
 st.caption(
     f"今年の{current_year - target_past_year}年前と{current_year - later_year}年前の資料を比較。"
@@ -110,12 +97,7 @@ later = histories.get((later_year, scope))
 if past and later:
     pairs = compare_events(past, later)
     if pairs:
-        st.dataframe([{
-            f"{target_past_year}年の出来事": pair["past"],
-            f"60年後・{later_year}年の出来事": pair["later"],
-            "共通テーマ": "・".join(pair["themes"]),
-            "共通する語": "・".join(pair["words"]) or "同じ分類の異なる語",
-        } for pair in pairs], hide_index=True, use_container_width=True)
+        st.markdown(comparison_table(pairs, target_past_year, later_year), unsafe_allow_html=True)
     else:
         st.info("取得した出来事には共通テーマが見つかりませんでした。別の年や地域を選べます。")
 left, right = st.columns(2)
@@ -131,7 +113,8 @@ with right:
         st.error(f"{later_year}年：{failures.get((later_year, scope), '資料を取得できません。')}")
 
 st.write("---")
-st.header(f"🔮 {forecast_past_year}年から考える、{current_year}年の予想")
+st.header(f"弐　{current_year}年を想う")
+st.subheader(f"{forecast_past_year}年の出来事を手掛かりに")
 st.caption(
     "日本と世界の60年前の出来事を別々に分類し、件数の多いテーマから最大3件ずつ予想します。"
     "予想文はルールによる仮説です。"
@@ -150,17 +133,13 @@ for column, region, label in [
         if not predictions:
             st.info("取得した出来事に分類できるテーマがないため、予想を表示できません。")
         for prediction in predictions:
-            st.markdown(f"### {prediction['theme']}")
-            st.warning(prediction["prediction"])
-            st.write(f"根拠：{prediction['reason']}")
-            for event in prediction["evidence"]:
-                st.write(f"・{event}")
+            st.markdown(prediction_card(prediction), unsafe_allow_html=True)
         show_events(history, f"根拠資料：{forecast_past_year}年の出来事")
 
 st.caption("世界欄は各国の出来事を扱う年記事を参照するため、日本の出来事が含まれる場合があります。")
 
 # --- ニュース ---
-st.header(f"📰 現在の瓦版（最新ニュース）")
+st.header("参　現在の瓦版")
 encoded = urllib.parse.quote(search_query)
 try:
     request = Request(
